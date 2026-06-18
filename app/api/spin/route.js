@@ -1,19 +1,30 @@
-export async function POST(req) {
-  const { prizes } = await req.json();
+import pool from "@/lib/db";
 
-  if (!prizes || prizes.length === 0) {
-    return Response.json({ error: "Prizes not found" }, { status: 400 });
+export async function POST() {
+  const result = await pool.query("SELECT * FROM prizes ORDER BY id ASC");
+  const prizes = result.rows;
+
+  if (!prizes.length) {
+    return Response.json({ error: "Sovrin yo‘q" }, { status: 400 });
   }
 
-  const totalChance = prizes.reduce((sum, item) => sum + Number(item.chance), 0);
-  let random = Math.random() * totalChance;
+  const total = prizes.reduce((sum, p) => sum + Number(p.chance), 0);
+
+  let rand = Math.random() * total;
+  let winner = prizes[0];
 
   for (const prize of prizes) {
-    random -= Number(prize.chance);
-    if (random <= 0) {
-      return Response.json({ prize });
+    rand -= Number(prize.chance);
+    if (rand <= 0) {
+      winner = prize;
+      break;
     }
   }
 
-  return Response.json({ prize: prizes[0] });
+  await pool.query(
+    "INSERT INTO spins (prize_id, prize_name) VALUES ($1, $2)",
+    [winner.id, winner.name]
+  );
+
+  return Response.json({ prize: winner });
 }
