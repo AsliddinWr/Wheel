@@ -2,7 +2,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "Premium Wheel",
-  description: "Spin and win prizes"
+  description: "Premium casino wheel"
 };
 
 export default function RootLayout({ children }) {
